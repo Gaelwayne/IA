@@ -1,49 +1,41 @@
-8-Puzzle Game
+# Resolución del Puzzle 8 con A* usando Árboles y Matrices en Python
 
-Este proyecto es del clásico juego de rompecabezas 8-puzzle
+Este proyecto implementa una solución al clásico problema del Puzzle 8 utilizando el algoritmo de búsqueda A*, representado con árboles y matrices en Python.
 
-Integrantes
+## Descripción
 
-Herrera Quiñones Abraham Gael
+El Puzzle 8 consiste en un tablero de 3x3 con 8 fichas numeradas y un espacio vacío. El objetivo es mover las fichas hasta alcanzar una configuración objetivo específica. Este programa utiliza el algoritmo A* para encontrar la secuencia de movimientos más corta que resuelve el puzzle.
 
-García Noriz Juan Eduardo
+## Funcionamiento del Código
 
-Materia
+* **Representación del Nodo:**
+    * La clase `Nodo` representa cada estado del puzzle, almacenando el estado actual, el nodo padre, el costo del camino y la heurística.
+* **Funciones Auxiliares:**
+    * `encontrar_vacio(estado)`: Encuentra la posición del espacio vacío en la matriz.
+    * `movimientos_posibles(estado)`: Genera los posibles estados resultantes de mover el espacio vacío.
+    * `heuristica(estado)`: Calcula la distancia de Manhattan como heurística.
+    * `es_objetivo(estado)`: Verifica si el estado actual es el estado objetivo.
+    * `imprimir_estado(estado)`: Imprime el estado del puzzle de forma legible.
+* **Algoritmo A*:**
+    * Utiliza una cola de prioridad (`heapq`) para explorar los nodos más prometedores.
+    * Mantiene un conjunto de estados visitados para evitar ciclos.
+    * Reconstruye el camino óptimo una vez que se encuentra el estado objetivo.
 
-Inteligencia Artificial
+## Ejemplo de Uso
 
-Horario: 9:00 a 10:00 AM
+El código incluye un ejemplo de uso con un estado inicial predefinido. Puedes modificar el estado inicial en la variable `estado_inicial` para probar diferentes configuraciones del puzzle.
 
-Escuela
+## Dependencias
 
-Instituto Tecnológico de Culiacán
+* `heapq`: Módulo de Python para la implementación de colas de prioridad.
 
-Descripción del Proyecto
+## Notas
 
-El 8-puzzle es un juego de rompecabezas deslizante que consiste en una cuadrícula de 3x3 con 8 fichas numeradas y un espacio vacío. El objetivo es reorganizar las fichas desde una configuración inicial hasta una configuración objetivo deslizando las fichas adyacentes al espacio vacío.
+* La heurística utilizada es la distancia de Manhattan, que proporciona una estimación admisible del costo restante.
+* El algoritmo A* garantiza encontrar la solución óptima (la secuencia de movimientos más corta) si existe una solución.
 
-Este proyecto incluye:
+## Autor
 
-Interfaz gráfica: Un juego interactivo donde puedes mover los tiles manualmente.
+* \arcia Noriz Juan Eduardo
+* Herrera Quiñones Abraham Gael
 
-Movimientos R1, R2, R3, ****R4: Los movimientos se muestran en la interfaz gráfica, saltando de línea cada 10 movimientos.
-
-Explicación del Código
-
-Métodos y su Funcionalidad
-
-__init__(self, ventana): Constructor de la clase. Inicializa la ventana del juego, define el estado inicial y el estado objetivo, y crea la interfaz gráfica.
-
-crear_interfaz(self): Crea la interfaz gráfica, generando los botones que representan las piezas del puzzle, el botón de reinicio y la etiqueta de movimientos.
-
-mover_pieza(self, indice): Mueve una pieza si el movimiento es válido. Intercambia la posición de la pieza con el espacio vacío y verifica si se ha completado el juego.
-
-movimiento_es_valido(self, indice, indice_vacio): Verifica si la pieza seleccionada está adyacente al espacio vacío y si el movimiento es posible.
-
-obtener_tipo_movimiento(self, indice, indice_vacio): Determina el tipo de movimiento realizado (arriba, abajo, izquierda o derecha) y lo devuelve en formato R1, R2, R3, R4.
-
-mostrar_movimiento(self, tipo_movimiento): Muestra en pantalla el movimiento realizado y actualiza el contador de movimientos.
-
-actualizar_botones(self): Refresca la interfaz gráfica con la nueva disposición de las piezas después de cada movimiento.
-
-reiniciar_juego(self): Reinicia el juego al estado inicial, restableciendo la posición de las piezas y el contador de movimientos.
