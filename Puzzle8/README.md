@@ -1,6 +1,6 @@
 8-Puzzle Game
 
-Este proyecto es una implementación del clásico juego de rompecabezas 8-puzzle, desarrollado como parte de la materia de Inteligencia Artificial en el Instituto Tecnológico de Culiacán.
+Este proyecto es del clásico juego de rompecabezas 8-puzzle
 
 Integrantes
 
