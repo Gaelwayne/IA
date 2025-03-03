@@ -36,6 +36,6 @@ El código incluye un ejemplo de uso con un estado inicial predefinido. Puedes m
 
 ## Autor
 
-* \arcia Noriz Juan Eduardo
+* Garcia Noriz Juan Eduardo
 * Herrera Quiñones Abraham Gael
 
