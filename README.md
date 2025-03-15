@@ -12,6 +12,5 @@ Horario 9:00 - 10:00
 * Tarea 3: Sistemas de recomendacion.
 * Tarea 4: Agentes deliberativos
 * Tarea 5: Puzzle8
-* Tarea 6: Paradigmas de ia
-* Tarea 7: Aprendizaje automatico
+* Tarea 6: Paradigmas de ia y Aprendizaje automatico
 
