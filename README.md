@@ -7,7 +7,6 @@ Horario 9:00 - 10:00
 
 ## Contenido del curso por el momento
 * Unidad 1
-
 * Tarea 1: Arbol binario.
 * Tarea 2: Historia de la inteligencia artificial.
 * Tarea 3: Sistemas de recomendacion.
