@@ -16,4 +16,5 @@ Horario 9:00 - 10:00
 * Unidad 2
 * Tarea 1: Paradigmas de ia y Aprendizaje automatico
 * Tarea 2: Red semantica de NVIDIA
+* Tarea 3: Clasificación de Correos Electrónicos: Spam vs No Spam
 
