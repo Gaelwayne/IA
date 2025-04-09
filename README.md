@@ -18,6 +18,6 @@ Horario 9:00 - 10:00
 * Tarea 2: Red semantica de NVIDIA
 * Tarea 3: Clasificación de Correos Electrónicos: Spam vs No Spam
 
-*unidad 3
-*Tarea 1: Introduccion a nuestro sistema experto
+* Unidad 3
+* Tarea 1: Introduccion a nuestro sistema experto
 
