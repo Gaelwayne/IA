@@ -28,9 +28,7 @@ basandose en el modelo de correos de spam-assassin.csv que es para ejecutar la p
     - Pandas.
     - Sklearn.
     nosotros para importarlas dependiendo la version
-    python -m pip install scikit-learn
-python -m pip install numpy
-python -m pip install pandas
+  
 
 
 ## Datos:

@@ -1,8 +1,6 @@
 # 1 - INSTALACION DE LAS LIBRERIAS NECESARIAS
 # pip install numpy pandas scikit-learn
 
-
-
 # 2 - IMPORTACION DE LIBRERIAS NECESARIAS
 import numpy as np
 import pandas as pd
@@ -10,165 +8,267 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, T
 from sklearn.metrics import accuracy_score, recall_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
+import time
+import gc  # Para gestión de memoria
 
-
+# Función para imprimir separadores consistentes
+def print_separator():
+    print('=' * 90)
+    
+# Función para mostrar el tiempo transcurrido
+def tiempo_transcurrido(inicio):
+    fin = time.time()
+    print(f"Tiempo: {fin - inicio:.2f} segundos")
 
 # 3 - CARGA Y PREPROCESAMIENTO DE LOS DATOS
+inicio_total = time.time()
+
+print("Iniciando carga de datos...")
+inicio = time.time()
 # Cargamos los datos
-data = pd.read_csv('spam_assassin.csv')
-registros_iniciales = len(data)
-print()
-print('=' * 90)
-print('Registros iniciales: ', registros_iniciales)
+try:
+    data = pd.read_csv('spam_assassin.csv')
+    registros_iniciales = len(data)
+    print()
+    print_separator()
+    print('Registros iniciales: ', registros_iniciales)
+    tiempo_transcurrido(inicio)
+except FileNotFoundError:
+    print("Error: No se encontró el archivo 'spam_assassin.csv'")
+    print("Asegúrate de que el archivo esté en el directorio correcto.")
+    exit(1)
 
 # Eliminacion de correos duplicados
+print("\nEliminando duplicados...")
+inicio = time.time()
 data = data.drop_duplicates()
 registros_unicos = len(data)
 print('Registros sin duplicados: ', registros_unicos)
 print("Registros eliminados: ", registros_iniciales - registros_unicos)
+tiempo_transcurrido(inicio)
 
-print('=' * 90)
+print_separator()
 
-# Imprimir el total de regostros que tienen 1 en la columna target
+# Estadísticas de spam
 cantidad_spam = data['target'].sum()
 print('Correos SPAM: ', cantidad_spam)
-# Imprimir el total de regostros que tienen 0 en la columna target
 cantidad_no_spam = len(data) - cantidad_spam
 print('Correos NO SPAM: ', cantidad_no_spam)
 
-print('=' * 90)
+print_separator()
 
 # PREPROCESAMIENTO DE LOS DATOS
-# Convertir todo a minusculas
-data['text'] = data['text'].str.lower()
+print("Preprocesando texto...")
+inicio = time.time()
 
-# Eliminar caracteres especiales para mantener solo letras y numeros
-data['text'] = data['text'].str.replace('[^a-zA-Z0-9 ]', '')
-data['text'] = data['text'].str.split()
+# Verificamos si las columnas necesarias existen
+if 'text' not in data.columns or 'target' not in data.columns:
+    print("Error: El dataset debe contener las columnas 'text' y 'target'")
+    exit(1)
 
-# Tokenizar y eliminar stopwords
-stopwords = list(ENGLISH_STOP_WORDS)
-data['text'] = data['text'].apply(lambda x: ' '.join([word for word in x if word not in stopwords]))
+# Convertir a minúsculas (solo si la columna es de tipo string)
+if data['text'].dtype == object:
+    data['text'] = data['text'].str.lower()
+    
+    # Eliminamos filas con valores nulos
+    data = data.dropna(subset=['text'])
+    
+    # Eliminar caracteres especiales - usando una operación más eficiente
+    data['text'] = data['text'].str.replace('[^a-zA-Z0-9 ]', '', regex=True)
+    
+    # Tokenización y eliminación de stopwords - vectorizada
+    stopwords = set(ENGLISH_STOP_WORDS)  # Usamos set para búsquedas más rápidas
+    
+    # Enfoque más eficiente para tokenizar y eliminar stopwords
+    def limpiar_texto(texto):
+        if isinstance(texto, str):
+            palabras = texto.split()
+            return ' '.join([palabra for palabra in palabras if palabra not in stopwords])
+        return ""
+    
+    data['text'] = data['text'].apply(limpiar_texto)
+else:
+    print("Advertencia: La columna 'text' no es de tipo string. Revisa tus datos.")
+    exit(1)
 
+tiempo_transcurrido(inicio)
+print_separator()
 
+# 4 - EXTRAER CARACTERISTICAS DE LOS DATOS
+print("Extrayendo características (vectorizando)...")
+inicio = time.time()
 
-# 4 - EXTRAER CARACTERISTICAS DE LOS DATOS (TF, IDF, TF-IDF)
+# Reducimos el tamaño del conjunto de características para mayor eficiencia
+max_features = 5000  # Limitamos las características para mejorar rendimiento
 
-# Frecuencia de término (TF): Número de veces que una palabra aparece en un documento.
-count_vectorizer = CountVectorizer(stop_words = 'english')
+# Vectorización TF-IDF directa (más eficiente que calcular TF e IDF por separado)
+vectorizer = TfidfVectorizer(stop_words='english', max_features=max_features)
+X = vectorizer.fit_transform(data['text'])
+palabras = vectorizer.get_feature_names_out()
+
+print(f'Matriz X: {X.shape} (Se limitó a {max_features} características)')
+
+# Obtener TF (para las visualizaciones)
+print("Calculando TF...")
+count_vectorizer = CountVectorizer(stop_words='english', max_features=max_features)
 X_tf = count_vectorizer.fit_transform(data['text'])
-tf_matrix = X_tf.toarray()
-palabras = count_vectorizer.get_feature_names_out()
-print("Frecuencia de términos (TF):\n", pd.DataFrame(tf_matrix, columns=palabras))
 
-print('=' * 90)
+# Solo mostramos una pequeña muestra de la matriz TF para evitar sobrecarga
+muestra_size = min(5, X_tf.shape[0])
+muestra_palabras = min(10, len(count_vectorizer.get_feature_names_out()))
+tf_muestra = X_tf[:muestra_size, :muestra_palabras].toarray()
+print(f"Muestra de Frecuencia de términos (TF) - primeras {muestra_size} filas, {muestra_palabras} columnas:")
+palabras_muestra = count_vectorizer.get_feature_names_out()[:muestra_palabras]
+print(pd.DataFrame(tf_muestra, columns=palabras_muestra))
 
-# Frecuencia de término inversa de documento (IDF): Mide la importancia de una palabra en un documento.
+print_separator()
+
+# IDF (solo para visualización)
+print("Calculando IDF...")
 tfidf_transformer = TfidfTransformer(use_idf=True, norm=None, smooth_idf=True)
 tfidf_transformer.fit(X_tf)
 idf_values = tfidf_transformer.idf_
-idf_dict = dict(zip(palabras, idf_values))
-print("Frecuencia Inversa de Documentos (IDF):\n", pd.DataFrame(list(idf_dict.items()), columns=['Palabra', 'Valor IDF']))
+# Mostramos solo las primeras 10 palabras para evitar sobrecarga
+idf_dict = dict(zip(palabras_muestra, idf_values[:muestra_palabras]))
+print(f"Muestra de IDF (primeras {muestra_palabras} palabras):")
+print(pd.DataFrame(list(idf_dict.items()), columns=['Palabra', 'Valor IDF']))
 
-print('=' * 90)
+print_separator()
 
-# TF-IDF: Multiplicación de TF y IDF para obtener la importancia de una palabra en un documento.
-X_tfidf = tfidf_transformer.transform(X_tf).toarray()
-print("TF-IDF Matrix:\n", pd.DataFrame(X_tfidf, columns=palabras))
+# TF-IDF (solo para visualización) - CORREGIDO
+print("Calculando TF-IDF (muestra)...")
+# Transformamos toda la matriz y luego tomamos una muestra para visualización
+X_tfidf = tfidf_transformer.transform(X_tf)
+tfidf_muestra = X_tfidf[:muestra_size, :muestra_palabras].toarray()
+print(f"Muestra de matriz TF-IDF (primeras {muestra_size} filas, {muestra_palabras} columnas):")
+print(pd.DataFrame(tfidf_muestra, columns=palabras_muestra))
 
-print('=' * 90)
+print_separator()
 
-vectorizer = TfidfVectorizer(stop_words = 'english')
-X = vectorizer.fit_transform(data['text'])
-print('X: ', X.shape)
+# Liberamos memoria
+del X_tf
+del X_tfidf
+del tfidf_transformer
+gc.collect()
 
-# Definir las etiquetas (spam o no spam)
+# Definir las etiquetas
 y = data['target']
 
 # Dividir los datos en entrenamiento y prueba
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
-print('Datos de entrenamiento: ', X_train.shape)
-print('Datos de prueba: ', X_test.shape)
+print("Dividiendo datos para entrenamiento y prueba...")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+print('Datos de entrenamiento:', X_train.shape)
+print('Datos de prueba:', X_test.shape)
+tiempo_transcurrido(inicio)
 
-print('=' * 90)
-
-
+print_separator()
 
 # 5 - ENTRENAMIENTO DEL MODELO
+print("Entrenando modelo Naive Bayes...")
+inicio = time.time()
 modelo_bayes = MultinomialNB()
 modelo_bayes.fit(X_train, y_train)
 y_pred = modelo_bayes.predict(X_test)
+tiempo_transcurrido(inicio)
 
+print_separator()
 
-
-# CALCULO DE PROBABILIDADES
-# Probabilidad de que sea spam
+# CALCULO DE PROBABILIDADES PRINCIPALES
 P_Spam = data['target'].sum() / len(data)
-print('Probabilidad de que sea spam P(Spam): ', P_Spam, ' = ', round(P_Spam * 100, 2), '%')
+print(f'Probabilidad de que sea spam P(Spam): {P_Spam:.4f} = {P_Spam * 100:.2f}%')
 
-# Probabilidad de que no sea spam
 P_NoSpam = 1 - P_Spam
-print("Probabilidad de que NO sea spam P(Spam)': ", P_NoSpam, ' = ', round(P_NoSpam * 100, 2), '%')
+print(f"Probabilidad de que NO sea spam P(NoSpam): {P_NoSpam:.4f} = {P_NoSpam * 100:.2f}%")
 
-print('=' * 90)
+print_separator()
 
-# Calcular la probabilidad de las características del correo electrónico dado que es spam P(Características|Spam):
-P_Caracteristicas_Spam = X[data['target'] == 1].sum(axis=0) / X[data['target'] == 1].sum()
+# Cálculo de probabilidades para palabras importantes (muestra)
+print("Calculando probabilidades para palabras importantes (muestra)...")
+inicio = time.time()
 
-df_Caracteristicas_Spam = pd.DataFrame(P_Caracteristicas_Spam.T, columns=['Probabilidad'])
-df_Caracteristicas_Spam['Palabra'] = palabras
-df_Caracteristicas_Spam = df_Caracteristicas_Spam[['Palabra', 'Probabilidad']]
-print('Probabilidad de las características del correo electrónico dado que es spam P(Caracteristicas | Spam):\n', df_Caracteristicas_Spam)
+try:
+    # Obtenemos las características más discriminativas
+    coef = modelo_bayes.feature_log_prob_
+    
+    # Limitamos a un número menor que max_features por si acaso
+    num_features_to_show = min(10, max_features)
+    
+    top_spam_idx = np.argsort(coef[1])[-num_features_to_show:]  # Índices de las palabras más relacionadas con spam
+    top_nospam_idx = np.argsort(coef[0])[-num_features_to_show:]  # Índices de las palabras más relacionadas con no-spam
 
-print('=' * 90)
+    # Mostramos las palabras más relacionadas con spam
+    print(f"Top {num_features_to_show} palabras relacionadas con SPAM:")
+    top_spam_words = [palabras[i] for i in top_spam_idx]
+    top_spam_probs = [np.exp(coef[1][i]) for i in top_spam_idx]
+    spam_words_df = pd.DataFrame({'Palabra': top_spam_words, 'Probabilidad': top_spam_probs})
+    print(spam_words_df)
 
-# Calcular la probabilidad de las características del correo electrónico dado que no es spam P(Características|NoSpam):
-P_Caracteristicas_NoSpam = X[data['target'] == 0].sum(axis=0) / X[data['target'] == 0].sum()
+    print(f"\nTop {num_features_to_show} palabras relacionadas con NO SPAM:")
+    top_nospam_words = [palabras[i] for i in top_nospam_idx]
+    top_nospam_probs = [np.exp(coef[0][i]) for i in top_nospam_idx]
+    nospam_words_df = pd.DataFrame({'Palabra': top_nospam_words, 'Probabilidad': top_nospam_probs})
+    print(nospam_words_df)
+except Exception as e:
+    print(f"No se pudieron calcular las probabilidades de palabras específicas: {e}")
+    print("Continuando con la evaluación del modelo...")
 
-df_Caracteristicas_NoSpam = pd.DataFrame(P_Caracteristicas_NoSpam.T, columns=['Probabilidad'])
-df_Caracteristicas_NoSpam['Palabra'] = palabras
-df_Caracteristicas_NoSpam = df_Caracteristicas_NoSpam[['Palabra', 'Probabilidad']]
-print('Probabilidad de las características del correo electrónico dado que NO es spam P(Caracteristicas | NoSpam): ', df_Caracteristicas_NoSpam)
-
-print('=' * 90)
-
-# Calcular la probabilidad posterior de que el correo electrónico sea spam P(Spam|Caracteristicas):
-P_Spam_Caracteristicas = (P_Spam * P_Caracteristicas_Spam) / (P_Spam * P_Caracteristicas_Spam + P_NoSpam * P_Caracteristicas_NoSpam)
-
-df_Spam_Caracteristicas = pd.DataFrame(P_Spam_Caracteristicas.T, columns=['Probabilidad'])
-df_Spam_Caracteristicas['Palabra'] = palabras
-df_Spam_Caracteristicas = df_Spam_Caracteristicas[['Palabra', 'Probabilidad']]
-print('Probabilidad posterior de que el correo electrónico sea spam P(Spam | Caracteristicas):\n', df_Spam_Caracteristicas)
-
-print('=' * 90)
-
-# Calculamos la probabilidad posterior de que el correo electrónico no sea spam P(NoSpam|Caracteristicas):
-P_NoSpam_Caracteristicas = (P_NoSpam * P_Caracteristicas_NoSpam) / (P_Spam * P_Caracteristicas_Spam + P_NoSpam * P_Caracteristicas_NoSpam)
-df_NoSpam_Caracteristicas = pd.DataFrame(P_NoSpam_Caracteristicas.T, columns=['Probabilidad'])
-df_NoSpam_Caracteristicas['Palabra'] = palabras
-df_NoSpam_Caracteristicas = df_NoSpam_Caracteristicas[['Palabra', 'Probabilidad']]
-print('Probabilidad posterior de que el correo electrónico NO sea spam P(NoSpam | Caracteristicas):\n', df_NoSpam_Caracteristicas)
-
-print('=' * 90)
-
-# Clasificación:
-# Un correo electrónico se clasificara como 'spam' si P(Spam|Caracteristicas) > P(NoSpam|Caracteristicas):
-clasificaciones = np.where(P_Spam_Caracteristicas > P_NoSpam_Caracteristicas, "Spam", "No Spam")
-print('Clasificaciones: ', clasificaciones)
-
-print('=' * 90)
-
-
+tiempo_transcurrido(inicio)
+print_separator()
 
 # 6 - EVALUACION DEL MODELO
-# Evaluamos las predicciones del modelo de Naive Bayes estándar
+print("Evaluando modelo...")
+inicio = time.time()
 precision = accuracy_score(y_test, y_pred)
 recuperacion = recall_score(y_test, y_pred)
-print('Precisión (Naive Bayes): ', precision, ' = ', round(precision * 100, 2), '%')
-print('Recuperación (Naive Bayes): ', recuperacion, ' = ', round(recuperacion * 100, 2), '%')
+print(f'Precisión (Naive Bayes): {precision:.4f} = {precision * 100:.2f}%')
+print(f'Recuperación (Naive Bayes): {recuperacion:.4f} = {recuperacion * 100:.2f}%')
 
-print('=' * 90)
+print_separator()
+print("Reporte de clasificación completo:")
+print(classification_report(y_test, y_pred))
 
-# print("Reporte de clasificación:\n", classification_report(y_test, y_pred))
+# Tiempo total de ejecución
+tiempo_total = time.time() - inicio_total
+print(f"Tiempo total de ejecución: {tiempo_total:.2f} segundos")
 
-# print('=' * 90)
+print_separator()
+
+# 7 - FUNCIONALIDAD PARA CLASIFICAR NUEVOS CORREOS
+def clasificar_correo(texto, modelo, vectorizador):
+    """
+    Clasifica un nuevo correo electrónico como spam o no spam.
+    
+    Args:
+        texto (str): El texto del correo a clasificar
+        modelo: El modelo entrenado de Naive Bayes
+        vectorizador: El vectorizador TF-IDF entrenado
+        
+    Returns:
+        str: "Spam" o "No Spam"
+        float: Probabilidad de que sea spam
+    """
+    # Preprocesar el texto igual que en el entrenamiento
+    texto = texto.lower()
+    texto = ''.join([c for c in texto if c.isalnum() or c.isspace()])
+    palabras = texto.split()
+    texto = ' '.join([palabra for palabra in palabras if palabra not in stopwords])
+    
+    # Vectorizar
+    X_nuevo = vectorizador.transform([texto])
+    
+    # Predecir
+    resultado = modelo.predict(X_nuevo)[0]
+    probabilidad = modelo.predict_proba(X_nuevo)[0][1]  # Probabilidad de clase 1 (spam)
+    
+    return "Spam" if resultado == 1 else "No Spam", probabilidad
+
+# Ejemplo de uso
+print("\nEjemplo de clasificación de nuevo correo:")
+ejemplo_texto = "Congratulations! You've won a free iPhone. Click here to claim your prize now!"
+resultado, prob = clasificar_correo(ejemplo_texto, modelo_bayes, vectorizer)
+print(f"Texto: {ejemplo_texto}")
+print(f"Clasificación: {resultado}")
+print(f"Probabilidad de spam: {prob:.2%}")
+
+print_separator()
+print("Modelo de clasificación de spam listo para usar. Puedes clasificar nuevos correos usando la función 'clasificar_correo'.")
