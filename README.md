@@ -20,4 +20,7 @@ Horario 9:00 - 10:00
 
 * Unidad 3
 * Tarea 1: Introduccion a nuestro sistema experto
+* Tarea 2: Reglas de inferencia y diagrama de sistema experto
+* Tarea 3: Base de conocimiento y valores linguisticos
+* Tarea 4: Sistema experto de fallas electronicas
 
