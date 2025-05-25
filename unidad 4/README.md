@@ -11,3 +11,6 @@ Pusimos en el input dir la ruta para sacar las imagenes originales
 y el output dir para guardar las imagenes procesadas
 
 y tener en su carpeta de salida osea output dir las imagenes preprocesadas
+
+nota:
+ adjuntamos el link de drive del dataset y el zip del dataset
