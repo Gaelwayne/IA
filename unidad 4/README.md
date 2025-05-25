@@ -9,3 +9,5 @@ Cada imagen se redimensiona a 48x48 píxeles y se guarda en una carpeta de salid
 
 Pusimos en el input dir la ruta para sacar las imagenes originales
 y el output dir para guardar las imagenes procesadas
+
+y tener en su carpeta de salida osea output dir las imagenes preprocesadas
