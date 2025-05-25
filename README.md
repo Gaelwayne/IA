@@ -24,3 +24,7 @@ Horario 9:00 - 10:00
 * Tarea 3: Base de conocimiento y valores linguisticos
 * Tarea 4: Sistema experto de fallas electronicas
 
+
+* Unidad 4
+* Tarea 1: Reporte clasificacion de img de personas de emociones y preprocesamiento de imagen de prueba
+* Tarea 2: 
